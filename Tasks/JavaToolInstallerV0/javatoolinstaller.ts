@@ -128,6 +128,7 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
         // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
         const volumes: Set<string> = new Set(fs.readdirSync(VOLUMES_FOLDER));
 
+        console.log(taskLib.loc('AttachDiskImage'));
         await runScript(false, `sudo hdiutil attach "${sourceFile}"`, '');
 
         const newVolumes: string[] = fs.readdirSync(VOLUMES_FOLDER).filter(volume => !volumes.has(volume));
@@ -149,6 +150,7 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
 
         jdkDirectory = await installJDK(pkgPath);
 
+        console.log(taskLib.loc('DetachDiskImage'));
         await runScript(false, `sudo hdiutil detach "${volumePath}"`, '');
     }
     else if (compressedFileExtension === '.pkg' && os.platform() === 'darwin') {
@@ -161,6 +163,8 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
 }
 
 async function installJDK(pkgPath: string): Promise<string> {
+    console.log(taskLib.loc('InstallJDK'));
+
     const JDK_FOLDER = '/Library/Java/JavaVirtualMachines';
     const JDK_HOME_FOLDER = 'Contents/Home';
 
