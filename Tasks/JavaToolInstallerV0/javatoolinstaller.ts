@@ -128,8 +128,7 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
         // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
         const volumes: Set<string> = new Set(fs.readdirSync(VOLUMES_FOLDER));
 
-        console.log(taskLib.loc('AttachDiskImage'));
-        await runScript(false, `sudo hdiutil attach "${sourceFile}"`, '');
+        await attach(sourceFile);
 
         const newVolumes: string[] = fs.readdirSync(VOLUMES_FOLDER).filter(volume => !volumes.has(volume));
         if (newVolumes.length !== 1) {
@@ -150,8 +149,7 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
 
         jdkDirectory = await installJDK(pkgPath);
 
-        console.log(taskLib.loc('DetachDiskImage'));
-        await runScript(false, `sudo hdiutil detach "${volumePath}"`, '');
+        await detach(volumePath);
     }
     else if (compressedFileExtension === '.pkg' && os.platform() === 'darwin') {
         jdkDirectory = await installJDK(sourceFile);
@@ -181,6 +179,16 @@ async function installJDK(pkgPath: string): Promise<string> {
 
     let jdkDirectory: string = path.join(JDK_FOLDER, newJDKs[0], JDK_HOME_FOLDER);
     return jdkDirectory;
+}
+
+async function attach(sourceFile: string): Promise<void> {
+    console.log(taskLib.loc('AttachDiskImage'));
+    await runScript(false, `sudo hdiutil attach "${sourceFile}"`, '');
+}
+
+async function detach(volumePath: string): Promise<void> {
+    console.log(taskLib.loc('DetachDiskImage'));
+    await runScript(false, `sudo hdiutil detach "${volumePath}"`, '');
 }
 
 async function runScript(failOnStderr: boolean, script: string, workingDirectory: string): Promise<any> {
