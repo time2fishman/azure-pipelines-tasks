@@ -182,8 +182,8 @@
     "UnsupportedDMGArchiveStructure": "ms-resource:loc.messages.UnsupportedDMGArchiveStructure",
     "NoPKGFile": "ms-resource:loc.messages.NoPKGFile",
     "SeveralPKGFiles": "ms-resource:loc.messages.SeveralPKGFiles",
-    "GeneratingScript": "ms-resource:loc.messages.GeneratingScript",
-    "ScriptContents": "ms-resource:loc.messages.ScriptContents",
-    "JS_ExitCode": "ms-resource:loc.messages.JS_ExitCode"
+    "InstallJDK": "ms-resource:loc.messages.InstallJDK",
+    "AttachDiskImage": "ms-resource:loc.messages.AttachDiskImage",
+    "DetachDiskImage": "ms-resource:loc.messages.DetachDiskImage"
   }
 }

@@ -58,7 +58,7 @@
   "loc.messages.UnsupportedDMGArchiveStructure": "JDK file is not supported. Verify if JDK file contains exactly one folder inside.",
   "loc.messages.NoPKGFile": "Could not find PKG file",
   "loc.messages.SeveralPKGFiles": "Found more than one PKG files",
-  "loc.messages.GeneratingScript": "Generating script.",
-  "loc.messages.ScriptContents": "Script contents:",
-  "loc.messages.JS_ExitCode": "Bash exited with code '%s'."
+  "loc.messages.InstallJDK": "Installing JDK",
+  "loc.messages.AttachDiskImage": "Attaching a disk image",
+  "loc.messages.DetachDiskImage": "Detaching a disk image"
 }
