@@ -122,11 +122,7 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
 
         await attach(sourceFile);
     
-        const newVolumes: string[] = fs.readdirSync(VOLUMES_FOLDER).filter(volume => !volumes.has(volume));
-        if (newVolumes.length !== 1) {
-            throw new Error(taskLib.loc('UnsupportedDMGArchiveStructure'));
-        }
-        const volumePath = path.join(VOLUMES_FOLDER, newVolumes[0]);
+        const volumePath: string = getVolumePath(volumes);
 
         let pkgPath: string = getPackagePath(volumePath);
         jdkDirectory = await installPkg(pkgPath);
@@ -141,6 +137,19 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
         jdkDirectory = await javaFilesExtractor.unzipJavaDownload(sourceFile, fileExtension, archiveExtractLocation);
     }
     return jdkDirectory;
+}
+
+/**
+ * Get the path to a folder inside the VOLUMES_FOLDER.
+ * @param volumes VOLUMES_FOLDER contents before attaching a disk image.
+ */
+function getVolumePath(volumes: Set<string>): string {
+    const newVolumes: string[] = fs.readdirSync(VOLUMES_FOLDER).filter(volume => !volumes.has(volume));
+
+    if (newVolumes.length !== 1) {
+        throw new Error(taskLib.loc('UnsupportedDMGArchiveStructure'));
+    }
+    return path.join(VOLUMES_FOLDER, newVolumes[0]);
 }
 
 /**
