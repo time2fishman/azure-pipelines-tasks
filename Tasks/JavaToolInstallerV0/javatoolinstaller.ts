@@ -69,20 +69,12 @@ async function getJava(versionSpec: string) {
         await azureDownloader.downloadArtifacts(extractLocation, '*' + fileNameAndPath);
         await sleepFor(250); //Wait for the file to be released before extracting it.
 
-        if (checkFileEnding) {
-            compressedFileExtension = getFileEnding(fileNameAndPath);
-        } else {
-            throw new Error(taskLib.loc('UnsupportedFileExtension'));
-        }
+        compressedFileExtension = getArchiveFileEnding(fileNameAndPath);
         const extractSource = buildFilePath(extractLocation, compressedFileExtension, fileNameAndPath);
         jdkDirectory = await unpackJava(extractSource, compressedFileExtension, extractLocation, jdkDirectory);
     } else { //JDK is in a local directory. Extract to specified target directory.
         console.log(taskLib.loc('RetrievingJdkFromLocalPath'));
-        if (checkFileEnding) {
-            compressedFileExtension = getFileEnding(taskLib.getInput('jdkFile', true));
-        } else {
-            throw new Error(taskLib.loc('UnsupportedFileExtension'));
-        }
+        compressedFileExtension = getArchiveFileEnding(taskLib.getInput('jdkFile', true));
         jdkDirectory = await unpackJava(taskLib.getInput('jdkFile', true), compressedFileExtension, extractLocation, jdkDirectory);
     }
 
@@ -106,21 +98,13 @@ function buildFilePath(localPathRoot: string, fileEnding: string, fileNameAndPat
     return extractSource;
 }
 
-function checkFileEnding(file: string): boolean {
-    for (const fileEnding of fileEndings) {
-        if (file.endsWith(fileEnding)) {
-            return true;  
-        }
-    }
-    return false;
-}
-
-function getFileEnding(file: string): string {
+function getArchiveFileEnding(file: string): string {
     for (const fileEnding of fileEndings) {
         if (file.endsWith(fileEnding)) {
             return fileEnding;  
         }
     }
+    throw new Error(taskLib.loc('UnsupportedFileExtension'));
 }
 
 async function unpackJava(sourceFile: string, compressedFileExtension: string, extractLocation: string, jdkDirectory: string): Promise<string> {
