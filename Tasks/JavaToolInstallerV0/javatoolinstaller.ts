@@ -10,6 +10,9 @@ import { AzureStorageArtifactDownloader } from './AzureStorageArtifacts/AzureSto
 import { JavaFilesExtractor, BIN_FOLDER } from './FileExtractor/JavaFilesExtractor';
 
 const fileEndings = ['.tar', '.tar.gz', '.zip', '.7z', '.dmg', '.pkg'];
+const VOLUMES_FOLDER = '/Volumes';
+const JDK_FOLDER = '/Library/Java/JavaVirtualMachines';
+const JDK_HOME_FOLDER = 'Contents/Home';
 taskLib.setResourcePath(path.join(__dirname, 'task.json'));
 
 async function run() {
@@ -123,8 +126,6 @@ function getFileEnding(file: string): string {
 async function unpackJava(sourceFile: string, compressedFileExtension: string, extractLocation: string, jdkDirectory: string): Promise<string> {
     const javaFilesExtractor = new JavaFilesExtractor();
     if (compressedFileExtension === '.dmg' && os.platform() === 'darwin') {
-        const VOLUMES_FOLDER = '/Volumes';
-
         // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
         const volumes: Set<string> = new Set(fs.readdirSync(VOLUMES_FOLDER));
 
@@ -162,9 +163,6 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
 
 async function installJDK(pkgPath: string): Promise<string> {
     console.log(taskLib.loc('InstallJDK'));
-
-    const JDK_FOLDER = '/Library/Java/JavaVirtualMachines';
-    const JDK_HOME_FOLDER = 'Contents/Home';
 
     // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
     const JDKs: Set<string> = new Set(fs.readdirSync(JDK_FOLDER));
