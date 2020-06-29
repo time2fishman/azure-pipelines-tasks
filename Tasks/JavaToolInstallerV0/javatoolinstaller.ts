@@ -121,17 +121,8 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
         }
 
         let volumePath: string = path.join(VOLUMES_FOLDER, newVolumes[0]);
-        let packages: string[] = fs.readdirSync(volumePath).filter(file => file.endsWith('.pkg'));
 
-        let pkgPath: string;
-        if (packages.length === 1) {
-            pkgPath = path.join(volumePath, packages[0]);
-        } else if (packages.length === 0) {
-            throw new Error(taskLib.loc('NoPKGFile'));
-        } else {
-            throw new Error(taskLib.loc('SeveralPKGFiles'));
-        }
-
+        let pkgPath: string = getPackagePath(volumePath);
         jdkDirectory = await installJDK(pkgPath);
 
         await detach(volumePath);
@@ -143,6 +134,18 @@ async function unpackJava(sourceFile: string, compressedFileExtension: string, e
         jdkDirectory = await javaFilesExtractor.unzipJavaDownload(sourceFile, compressedFileExtension, extractLocation);
     }
     return jdkDirectory;
+}
+
+function getPackagePath(volumePath: string): string {
+    const packages: string[] = fs.readdirSync(volumePath).filter(file => file.endsWith('.pkg'));
+
+    if (packages.length === 1) {
+        return path.join(volumePath, packages[0]);
+    } else if (packages.length === 0) {
+        throw new Error(taskLib.loc('NoPKGFile'));
+    } else {
+        throw new Error(taskLib.loc('SeveralPKGFiles'));
+    }
 }
 
 async function installJDK(pkgPath: string): Promise<string> {
