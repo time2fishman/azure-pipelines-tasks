@@ -9,7 +9,7 @@ import uuidV4 = require('uuid/v4');
 import { AzureStorageArtifactDownloader } from './AzureStorageArtifacts/AzureStorageArtifactDownloader';
 import { JavaFilesExtractor, BIN_FOLDER } from './FileExtractor/JavaFilesExtractor';
 
-const fileEndings = ['.tar', '.tar.gz', '.zip', '.7z', '.dmg', '.pkg'];
+const supportedFileEndings = ['.tar', '.tar.gz', '.zip', '.7z', '.dmg', '.pkg'];
 const VOLUMES_FOLDER = '/Volumes';
 const JDK_FOLDER = '/Library/Java/JavaVirtualMachines';
 const JDK_HOME_FOLDER = 'Contents/Home';
@@ -69,13 +69,14 @@ async function getJava(versionSpec: string) {
         await azureDownloader.downloadArtifacts(extractLocation, '*' + fileNameAndPath);
         await sleepFor(250); //Wait for the file to be released before extracting it.
 
-        compressedFileExtension = getArchiveFileEnding(fileNameAndPath);
+        compressedFileExtension = getSupportedFileEnding(fileNameAndPath);
         const extractSource = buildFilePath(extractLocation, compressedFileExtension, fileNameAndPath);
-        jdkDirectory = await unpackJava(extractSource, compressedFileExtension, extractLocation, jdkDirectory);
+        jdkDirectory = await installJDK(extractSource, compressedFileExtension, extractLocation);
     } else { //JDK is in a local directory. Extract to specified target directory.
         console.log(taskLib.loc('RetrievingJdkFromLocalPath'));
-        compressedFileExtension = getArchiveFileEnding(taskLib.getInput('jdkFile', true));
-        jdkDirectory = await unpackJava(taskLib.getInput('jdkFile', true), compressedFileExtension, extractLocation, jdkDirectory);
+        const jdkFile: string = taskLib.getInput('jdkFile', true);
+        compressedFileExtension = getSupportedFileEnding(jdkFile);
+        jdkDirectory = await installJDK(jdkFile, compressedFileExtension, extractLocation);
     }
 
     console.log(taskLib.loc('SetJavaHome', jdkDirectory));
@@ -98,8 +99,8 @@ function buildFilePath(localPathRoot: string, fileEnding: string, fileNameAndPat
     return extractSource;
 }
 
-function getArchiveFileEnding(file: string): string {
-    for (const fileEnding of fileEndings) {
+function getSupportedFileEnding(file: string): string {
+    for (const fileEnding of supportedFileEndings) {
         if (file.endsWith(fileEnding)) {
             return fileEnding;  
         }
@@ -107,35 +108,45 @@ function getArchiveFileEnding(file: string): string {
     throw new Error(taskLib.loc('UnsupportedFileExtension'));
 }
 
-async function unpackJava(sourceFile: string, compressedFileExtension: string, extractLocation: string, jdkDirectory: string): Promise<string> {
-    const javaFilesExtractor = new JavaFilesExtractor();
-    if (compressedFileExtension === '.dmg' && os.platform() === 'darwin') {
+/**
+ * Install JDK.
+ * @param sourceFile Path to JDK file.
+ * @param fileExtension JDK file extension.
+ * @param archiveExtractLocation Path to folder to extract a JDK.
+ */
+async function installJDK(sourceFile: string, fileExtension: string, archiveExtractLocation: string): Promise<string> {
+    let jdkDirectory;
+    if (fileExtension === '.dmg' && os.platform() === 'darwin') {
         // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
         const volumes: Set<string> = new Set(fs.readdirSync(VOLUMES_FOLDER));
 
         await attach(sourceFile);
-
+    
         const newVolumes: string[] = fs.readdirSync(VOLUMES_FOLDER).filter(volume => !volumes.has(volume));
         if (newVolumes.length !== 1) {
             throw new Error(taskLib.loc('UnsupportedDMGArchiveStructure'));
         }
-
-        let volumePath: string = path.join(VOLUMES_FOLDER, newVolumes[0]);
+        const volumePath = path.join(VOLUMES_FOLDER, newVolumes[0]);
 
         let pkgPath: string = getPackagePath(volumePath);
-        jdkDirectory = await installJDK(pkgPath);
+        jdkDirectory = await installPkg(pkgPath);
 
         await detach(volumePath);
     }
-    else if (compressedFileExtension === '.pkg' && os.platform() === 'darwin') {
-        jdkDirectory = await installJDK(sourceFile);
+    else if (fileExtension === '.pkg' && os.platform() === 'darwin') {
+        jdkDirectory = await installPkg(sourceFile);
     }
     else {
-        jdkDirectory = await javaFilesExtractor.unzipJavaDownload(sourceFile, compressedFileExtension, extractLocation);
+        const javaFilesExtractor = new JavaFilesExtractor();
+        jdkDirectory = await javaFilesExtractor.unzipJavaDownload(sourceFile, fileExtension, archiveExtractLocation);
     }
     return jdkDirectory;
 }
 
+/**
+ * Get path to a .pkg file.
+ * @param volumePath Path to the folder containing a .pkg file.
+ */
 function getPackagePath(volumePath: string): string {
     const packages: string[] = fs.readdirSync(volumePath).filter(file => file.endsWith('.pkg'));
 
@@ -148,13 +159,13 @@ function getPackagePath(volumePath: string): string {
     }
 }
 
-async function installJDK(pkgPath: string): Promise<string> {
+async function installPkg(pkgPath: string): Promise<string> {
     console.log(taskLib.loc('InstallJDK'));
 
     // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
     const JDKs: Set<string> = new Set(fs.readdirSync(JDK_FOLDER));
 
-    await installPKG(pkgPath);
+    await runPkgInstaller(pkgPath);
 
     const newJDKs = fs.readdirSync(JDK_FOLDER).filter(jdkName => !JDKs.has(jdkName));
 
@@ -166,6 +177,10 @@ async function installJDK(pkgPath: string): Promise<string> {
     return jdkDirectory;
 }
 
+/**
+ * Run a tool with `sudo` on Linux and macOS
+ * Precondition: `toolName` executable is in PATH
+ */
 function sudo(toolName: string): ToolRunner {
     if (os.platform() === 'win32') {
         return taskLib.tool(toolName);
@@ -175,6 +190,10 @@ function sudo(toolName: string): ToolRunner {
     }
 }
 
+/**
+ * Attach a disk image.
+ * @param sourceFile Path to JDK file.
+ */
 async function attach(sourceFile: string): Promise<void> {
     console.log(taskLib.loc('AttachDiskImage'));
     const hdiutil = sudo('hdiutil');
@@ -182,7 +201,11 @@ async function attach(sourceFile: string): Promise<void> {
     await hdiutil.exec();
 }
 
-async function installPKG(pkgPath: string): Promise<void> {
+/**
+ * Install a .pkg file.
+ * @param pkgPath Path to a .pkg file.
+ */
+async function runPkgInstaller(pkgPath: string): Promise<void> {
     try {
         const installer = sudo('installer');
         installer.line(`-package "${pkgPath}" -target /`);
@@ -192,6 +215,10 @@ async function installPKG(pkgPath: string): Promise<void> {
     }
 }
 
+/**
+ * Detach a disk image.
+ * @param volumePath Path to the folder containing a .pkg file.
+ */
 async function detach(volumePath: string): Promise<void> {
     console.log(taskLib.loc('DetachDiskImage'));
     const hdiutil = sudo('hdiutil');
