@@ -179,11 +179,12 @@
         "UsePreinstalledJava": "Use preinstalled JDK from %s",
         "WrongArchiveStructure": "JDK file is not valid. Verify if JDK file contains only one root folder with 'bin' inside.",
         "NewJDKIsNotInstalled": "New JDK is not installed.",
-        "UnsupportedDMGArchiveStructure": "JDK file is not supported. Verify if JDK file contains exactly one folder inside.",
-        "NoPKGFile": "Could not find PKG file",
-        "SeveralPKGFiles": "Found more than one PKG files",
-        "InstallJDK": "Installing JDK",
-        "AttachDiskImage": "Attaching a disk image",
-        "DetachDiskImage": "Detaching a disk image"
+        "UnsupportedDMGStructure": "JDK file is not supported. Verify if JDK file contains exactly one folder inside.",
+        "NoPKGFile": "Could not find PKG file.",
+        "SeveralPKGFiles": "Found more than one PKG files.",
+        "InstallJDK": "Installing JDK.",
+        "AttachDiskImage": "Attaching a disk image.",
+        "DetachDiskImage": "Detaching a disk image.",
+        "PkgPathDoesNotExist": "Package path does not exist."
     }
 }

@@ -55,10 +55,11 @@
   "loc.messages.UsePreinstalledJava": "Use preinstalled JDK from %s",
   "loc.messages.WrongArchiveStructure": "JDK file is not valid. Verify if JDK file contains only one root folder with 'bin' inside.",
   "loc.messages.NewJDKIsNotInstalled": "New JDK is not installed.",
-  "loc.messages.UnsupportedDMGArchiveStructure": "JDK file is not supported. Verify if JDK file contains exactly one folder inside.",
-  "loc.messages.NoPKGFile": "Could not find PKG file",
-  "loc.messages.SeveralPKGFiles": "Found more than one PKG files",
-  "loc.messages.InstallJDK": "Installing JDK",
-  "loc.messages.AttachDiskImage": "Attaching a disk image",
-  "loc.messages.DetachDiskImage": "Detaching a disk image"
+  "loc.messages.UnsupportedDMGStructure": "JDK file is not supported. Verify if JDK file contains exactly one folder inside.",
+  "loc.messages.NoPKGFile": "Could not find PKG file.",
+  "loc.messages.SeveralPKGFiles": "Found more than one PKG files.",
+  "loc.messages.InstallJDK": "Installing JDK.",
+  "loc.messages.AttachDiskImage": "Attaching a disk image.",
+  "loc.messages.DetachDiskImage": "Detaching a disk image.",
+  "loc.messages.PkgPathDoesNotExist": "Package path does not exist."
 }

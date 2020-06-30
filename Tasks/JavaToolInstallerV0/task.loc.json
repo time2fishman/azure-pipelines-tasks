@@ -179,11 +179,12 @@
     "UsePreinstalledJava": "ms-resource:loc.messages.UsePreinstalledJava",
     "WrongArchiveStructure": "ms-resource:loc.messages.WrongArchiveStructure",
     "NewJDKIsNotInstalled": "ms-resource:loc.messages.NewJDKIsNotInstalled",
-    "UnsupportedDMGArchiveStructure": "ms-resource:loc.messages.UnsupportedDMGArchiveStructure",
+    "UnsupportedDMGStructure": "ms-resource:loc.messages.UnsupportedDMGStructure",
     "NoPKGFile": "ms-resource:loc.messages.NoPKGFile",
     "SeveralPKGFiles": "ms-resource:loc.messages.SeveralPKGFiles",
     "InstallJDK": "ms-resource:loc.messages.InstallJDK",
     "AttachDiskImage": "ms-resource:loc.messages.AttachDiskImage",
-    "DetachDiskImage": "ms-resource:loc.messages.DetachDiskImage"
+    "DetachDiskImage": "ms-resource:loc.messages.DetachDiskImage",
+    "PkgPathDoesNotExist": "ms-resource:loc.messages.PkgPathDoesNotExist"
   }
 }

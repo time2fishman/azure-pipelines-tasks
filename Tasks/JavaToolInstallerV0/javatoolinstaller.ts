@@ -99,6 +99,10 @@ function buildFilePath(localPathRoot: string, fileEnding: string, fileNameAndPat
     return extractSource;
 }
 
+/**
+ * Return file ending if it is supported. Otherwise throw an error.
+ * @param JDKfile Path to a file.
+ */
 function getSupportedFileEnding(file: string): string {
     for (const fileEnding of supportedFileEndings) {
         if (file.endsWith(fileEnding)) {
@@ -127,7 +131,12 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
         let pkgPath: string = getPackagePath(volumePath);
         jdkDirectory = await installPkg(pkgPath);
 
-        await detach(volumePath);
+        try {
+            await detach(volumePath);
+        }
+        catch(error) {
+            taskLib.error(error.message);
+        }
     }
     else if (fileExtension === '.pkg' && os.platform() === 'darwin') {
         jdkDirectory = await installPkg(sourceFile);
@@ -141,19 +150,21 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
 
 /**
  * Get the path to a folder inside the VOLUMES_FOLDER.
+ * Only for macOS.
  * @param volumes VOLUMES_FOLDER contents before attaching a disk image.
  */
 function getVolumePath(volumes: Set<string>): string {
     const newVolumes: string[] = fs.readdirSync(VOLUMES_FOLDER).filter(volume => !volumes.has(volume));
 
     if (newVolumes.length !== 1) {
-        throw new Error(taskLib.loc('UnsupportedDMGArchiveStructure'));
+        throw new Error(taskLib.loc('UnsupportedDMGStructure'));
     }
     return path.join(VOLUMES_FOLDER, newVolumes[0]);
 }
 
 /**
  * Get path to a .pkg file.
+ * Only for macOS.
  * @param volumePath Path to the folder containing a .pkg file.
  */
 function getPackagePath(volumePath: string): string {
@@ -169,6 +180,10 @@ function getPackagePath(volumePath: string): string {
 }
 
 async function installPkg(pkgPath: string): Promise<string> {
+    if (!fs.existsSync(pkgPath)) {
+        throw new Error('PkgPathDoesNotExist');
+    }
+
     console.log(taskLib.loc('InstallJDK'));
 
     // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
@@ -187,8 +202,8 @@ async function installPkg(pkgPath: string): Promise<string> {
 }
 
 /**
- * Run a tool with `sudo` on Linux and macOS
- * Precondition: `toolName` executable is in PATH
+ * Run a tool with `sudo` on Linux and macOS.
+ * Precondition: `toolName` executable is in PATH.
  */
 function sudo(toolName: string): ToolRunner {
     if (os.platform() === 'win32') {
@@ -212,6 +227,7 @@ async function attach(sourceFile: string): Promise<void> {
 
 /**
  * Install a .pkg file.
+ * Only for macOS.
  * @param pkgPath Path to a .pkg file.
  */
 async function runPkgInstaller(pkgPath: string): Promise<void> {
@@ -219,7 +235,7 @@ async function runPkgInstaller(pkgPath: string): Promise<void> {
         const installer = sudo('installer');
         installer.line(`-package "${pkgPath}" -target /`);
         await installer.exec();
-    } catch (e) {
+    } catch (error) {
         taskLib.debug('Failed to install pkg file');
     }
 }
