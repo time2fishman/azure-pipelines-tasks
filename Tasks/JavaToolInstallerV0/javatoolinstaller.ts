@@ -210,6 +210,7 @@ async function runPkgInstaller(pkgPath: string): Promise<void> {
         await installer.exec();
     } catch (error) {
         taskLib.debug('Failed to install pkg file');
+        taskLib.error(error.message);
     }
 }
 
