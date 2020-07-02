@@ -104,12 +104,13 @@ function buildFilePath(localPathRoot: string, fileEnding: string, fileNameAndPat
  * @param file Path to a file.
  */
 function getSupportedFileEnding(file: string): string {
-    for (const fileEnding of supportedFileEndings) {
-        if (file.endsWith(fileEnding)) {
-            return fileEnding;  
-        }
+    const fileEnding: string = supportedFileEndings.find(ending => file.endsWith(ending)); 
+
+    if (fileEnding) {
+        return fileEnding;
+    } else {
+        throw new Error(taskLib.loc('UnsupportedFileExtension'));
     }
-    throw new Error(taskLib.loc('UnsupportedFileExtension'));
 }
 
 /**
