@@ -3,11 +3,10 @@ import os = require('os');
 import path = require('path');
 import taskLib = require('azure-pipelines-task-lib/task');
 import toolLib = require('azure-pipelines-tool-lib/tool');
-import { ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
-import uuidV4 = require('uuid/v4');
 
 import { AzureStorageArtifactDownloader } from './AzureStorageArtifacts/AzureStorageArtifactDownloader';
 import { JavaFilesExtractor, BIN_FOLDER } from './FileExtractor/JavaFilesExtractor';
+import { sleepFor, buildFilePath, sudo, attach, detach } from './taskutils';
 
 const supportedFileEndings = ['.tar', '.tar.gz', '.zip', '.7z', '.dmg', '.pkg'];
 const VOLUMES_FOLDER = '/Volumes';
@@ -70,7 +69,7 @@ async function getJava(versionSpec: string) {
         await sleepFor(250); //Wait for the file to be released before extracting it.
 
         compressedFileExtension = getSupportedFileEnding(fileNameAndPath);
-        const extractSource = buildFilePath(extractLocation, compressedFileExtension, fileNameAndPath);
+        const extractSource = buildFilePath(extractLocation, fileNameAndPath);
         jdkDirectory = await installJDK(extractSource, compressedFileExtension, extractLocation, extendedJavaHome, versionSpec);
     } else { //JDK is in a local directory. Extract to specified target directory.
         console.log(taskLib.loc('RetrievingJdkFromLocalPath'));
@@ -84,19 +83,6 @@ async function getJava(versionSpec: string) {
     taskLib.setVariable('JAVA_HOME', jdkDirectory);
     taskLib.setVariable(extendedJavaHome, jdkDirectory);
     toolLib.prependPath(path.join(jdkDirectory, BIN_FOLDER));
-}
-
-function sleepFor(sleepDurationInMillisecondsSeconds): Promise<any> {
-    return new Promise((resolve, reeject) => {
-        setTimeout(resolve, sleepDurationInMillisecondsSeconds);
-    });
-}
-
-function buildFilePath(localPathRoot: string, fileEnding: string, fileNameAndPath: string): string {
-    const fileName = fileNameAndPath.split(/[\\\/]/).pop();
-    const extractSource = path.join(localPathRoot, fileName);
-
-    return extractSource;
 }
 
 /**
@@ -213,30 +199,6 @@ async function installPkg(pkgPath: string, extendedJavaHome: string, versionSpec
 }
 
 /**
- * Run a tool with `sudo` on Linux and macOS.
- * Precondition: `toolName` executable is in PATH.
- */
-function sudo(toolName: string): ToolRunner {
-    if (os.platform() === 'win32') {
-        return taskLib.tool(toolName);
-    } else {
-        const toolPath = taskLib.which(toolName);
-        return taskLib.tool('sudo').line(toolPath);
-    }
-}
-
-/**
- * Attach a disk image.
- * @param sourceFile Path to JDK file.
- */
-async function attach(sourceFile: string): Promise<void> {
-    console.log(taskLib.loc('AttachDiskImage'));
-    const hdiutil = sudo('hdiutil');
-    hdiutil.line(`attach "${sourceFile}"`);
-    await hdiutil.exec();
-}
-
-/**
  * Install a .pkg file.
  * Only for macOS.
  * @param pkgPath Path to a .pkg file.
@@ -249,17 +211,6 @@ async function runPkgInstaller(pkgPath: string): Promise<void> {
     } catch (error) {
         taskLib.debug('Failed to install pkg file');
     }
-}
-
-/**
- * Detach a disk image.
- * @param volumePath Path to the folder containing a .pkg file.
- */
-async function detach(volumePath: string): Promise<void> {
-    console.log(taskLib.loc('DetachDiskImage'));
-    const hdiutil = sudo('hdiutil');
-    hdiutil.line(`detach "${volumePath}"`);
-    await hdiutil.exec();
 }
 
 run();
