@@ -71,12 +71,12 @@ async function getJava(versionSpec: string) {
 
         compressedFileExtension = getSupportedFileEnding(fileNameAndPath);
         const extractSource = buildFilePath(extractLocation, compressedFileExtension, fileNameAndPath);
-        jdkDirectory = await installJDK(extractSource, compressedFileExtension, extractLocation);
+        jdkDirectory = await installJDK(extractSource, compressedFileExtension, extractLocation, extendedJavaHome, versionSpec);
     } else { //JDK is in a local directory. Extract to specified target directory.
         console.log(taskLib.loc('RetrievingJdkFromLocalPath'));
         const jdkFile: string = taskLib.getInput('jdkFile', true);
         compressedFileExtension = getSupportedFileEnding(jdkFile);
-        jdkDirectory = await installJDK(jdkFile, compressedFileExtension, extractLocation);
+        jdkDirectory = await installJDK(jdkFile, compressedFileExtension, extractLocation, extendedJavaHome, versionSpec);
     }
 
     console.log(taskLib.loc('SetJavaHome', jdkDirectory));
@@ -101,7 +101,7 @@ function buildFilePath(localPathRoot: string, fileEnding: string, fileNameAndPat
 
 /**
  * Return file ending if it is supported. Otherwise throw an error.
- * @param JDKfile Path to a file.
+ * @param file Path to a file.
  */
 function getSupportedFileEnding(file: string): string {
     for (const fileEnding of supportedFileEndings) {
@@ -118,7 +118,7 @@ function getSupportedFileEnding(file: string): string {
  * @param fileExtension JDK file extension.
  * @param archiveExtractLocation Path to folder to extract a JDK.
  */
-async function installJDK(sourceFile: string, fileExtension: string, archiveExtractLocation: string): Promise<string> {
+async function installJDK(sourceFile: string, fileExtension: string, archiveExtractLocation: string, extendedJavaHome: string, versionSpec: string): Promise<string> {
     let jdkDirectory;
     if (fileExtension === '.dmg' && os.platform() === 'darwin') {
         // Using set because 'includes' array method requires tsconfig option "lib": ["ES2017"]
@@ -129,7 +129,7 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
         const volumePath: string = getVolumePath(volumes);
 
         let pkgPath: string = getPackagePath(volumePath);
-        jdkDirectory = await installPkg(pkgPath);
+        jdkDirectory = await installPkg(pkgPath, extendedJavaHome, versionSpec);
 
         try {
             await detach(volumePath);
@@ -139,7 +139,7 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
         }
     }
     else if (fileExtension === '.pkg' && os.platform() === 'darwin') {
-        jdkDirectory = await installPkg(sourceFile);
+        jdkDirectory = await installPkg(sourceFile, extendedJavaHome, versionSpec);
     }
     else {
         const javaFilesExtractor = new JavaFilesExtractor();
@@ -179,7 +179,7 @@ function getPackagePath(volumePath: string): string {
     }
 }
 
-async function installPkg(pkgPath: string): Promise<string> {
+async function installPkg(pkgPath: string, extendedJavaHome: string, versionSpec: string): Promise<string> {
     if (!fs.existsSync(pkgPath)) {
         throw new Error('PkgPathDoesNotExist');
     }
@@ -193,11 +193,21 @@ async function installPkg(pkgPath: string): Promise<string> {
 
     const newJDKs = fs.readdirSync(JDK_FOLDER).filter(jdkName => !JDKs.has(jdkName));
 
-    if (newJDKs.length !== 1) {
-        throw new Error(taskLib.loc('NewJDKIsNotInstalled'));
+    let jdkDirectory: string 
+
+    if (newJDKs.length === 0) {
+        const preInstalledJavaDirectory: string | undefined = taskLib.getVariable(extendedJavaHome);
+        if (preInstalledJavaDirectory === undefined) {
+            throw new Error(taskLib.loc('JavaNotPreinstalled', versionSpec));
+        }
+        console.log(taskLib.loc('PreInstalledJavaUpgraded'));
+        console.log(taskLib.loc('UsePreinstalledJava', preInstalledJavaDirectory));
+        jdkDirectory = preInstalledJavaDirectory;
+    } else {
+        console.log(taskLib.loc('JavaSuccessfullyInstalled'));
+        jdkDirectory = path.join(JDK_FOLDER, newJDKs[0], JDK_HOME_FOLDER);
     }
 
-    let jdkDirectory: string = path.join(JDK_FOLDER, newJDKs[0], JDK_HOME_FOLDER);
     return jdkDirectory;
 }
 

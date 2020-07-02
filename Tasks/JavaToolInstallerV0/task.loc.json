@@ -185,6 +185,7 @@
     "InstallJDK": "ms-resource:loc.messages.InstallJDK",
     "AttachDiskImage": "ms-resource:loc.messages.AttachDiskImage",
     "DetachDiskImage": "ms-resource:loc.messages.DetachDiskImage",
-    "PkgPathDoesNotExist": "ms-resource:loc.messages.PkgPathDoesNotExist"
+    "PkgPathDoesNotExist": "ms-resource:loc.messages.PkgPathDoesNotExist",
+    "PreInstalledJavaUpgraded": "ms-resource:loc.messages.PreInstalledJavaUpgraded"
   }
 }
