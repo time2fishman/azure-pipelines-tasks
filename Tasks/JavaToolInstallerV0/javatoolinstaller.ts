@@ -55,7 +55,7 @@ async function getJava(versionSpec: string) {
         console.log(taskLib.loc('Info_ResolvedToolFromCache', version));
     } else if (preInstalled) {
         const preInstalledJavaDirectory: string | undefined = taskLib.getVariable(extendedJavaHome);
-        if (preInstalledJavaDirectory === undefined) {
+        if (!preInstalledJavaDirectory) {
             throw new Error(taskLib.loc('JavaNotPreinstalled', versionSpec));
         }
         console.log(taskLib.loc('UsePreinstalledJava', preInstalledJavaDirectory));
@@ -194,11 +194,11 @@ async function installPkg(pkgPath: string, extendedJavaHome: string, versionSpec
 
     const newJDKs = fs.readdirSync(JDK_FOLDER).filter(jdkName => !JDKs.has(jdkName));
 
-    let jdkDirectory: string 
+    let jdkDirectory: string;
 
     if (newJDKs.length === 0) {
         const preInstalledJavaDirectory: string | undefined = taskLib.getVariable(extendedJavaHome);
-        if (preInstalledJavaDirectory === undefined) {
+        if (!preInstalledJavaDirectory) {
             throw new Error(taskLib.loc('JavaNotPreinstalled', versionSpec));
         }
         console.log(taskLib.loc('PreInstalledJavaUpgraded'));
