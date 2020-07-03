@@ -10,6 +10,11 @@ export function sleepFor(sleepDurationInMilliSeconds: number): Promise<any> {
     });
 }
 
+/**
+ * Build a path to file in local root.
+ * @param localPathRoot Path to the folder where file should be located.
+ * @param fileNameAndPath Path to the file which name should be taken.
+ */
 export function buildFilePath(localPathRoot: string, fileNameAndPath: string): string {
     const fileName = fileNameAndPath.split(/[\\\/]/).pop();
     const extractSource = path.join(localPathRoot, fileName);
@@ -32,6 +37,7 @@ export function sudo(toolName: string): ToolRunner {
 
 /**
  * Attach a disk image.
+ * Only for macOS.
  * @param sourceFile Path to a disk image file.
  */
 export async function attach(sourceFile: string): Promise<void> {
