@@ -4,6 +4,11 @@ import * as path from 'path';
 
 import { ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
 
+/**
+ * Returns promise which will be resolved in given number of milliseconds.
+ * @param sleepDurationInMilliSeconds Number of milliseconds.
+ * @returns Promise<any>
+ */
 export function sleepFor(sleepDurationInMilliSeconds: number): Promise<any> {
     return new Promise((resolve, reject) => {
         setTimeout(resolve, sleepDurationInMilliSeconds);
@@ -14,6 +19,7 @@ export function sleepFor(sleepDurationInMilliSeconds: number): Promise<any> {
  * Build a path to file in local root.
  * @param localPathRoot Path to the folder where file should be located.
  * @param fileNameAndPath Path to the file which name should be taken.
+ * @returns string
  */
 export function buildFilePath(localPathRoot: string, fileNameAndPath: string): string {
     const fileName = fileNameAndPath.split(/[\\\/]/).pop();
@@ -25,6 +31,7 @@ export function buildFilePath(localPathRoot: string, fileNameAndPath: string): s
 /**
  * Run a tool with `sudo` on Linux and macOS.
  * Precondition: `toolName` executable is in PATH.
+ * @returns ToolRunner
  */
 export function sudo(toolName: string): ToolRunner {
     if (os.platform() === 'win32') {
@@ -38,22 +45,27 @@ export function sudo(toolName: string): ToolRunner {
 /**
  * Attach a disk image.
  * Only for macOS.
+ * Returns promise with return code.
  * @param sourceFile Path to a disk image file.
+ * @returns number
  */
-export async function attach(sourceFile: string): Promise<void> {
+export async function attach(sourceFile: string): Promise<number> {
     console.log(tl.loc('AttachDiskImage'));
     const hdiutil = sudo('hdiutil');
     hdiutil.line(`attach "${sourceFile}"`);
-    await hdiutil.exec();
+    return await hdiutil.exec();
 }
 
 /**
  * Detach a disk image.
+ * Only for macOS.
+ * Returns promise with return code.
  * @param volumePath Path to the attached disk image.
+ * @returns number
  */
-export async function detach(volumePath: string): Promise<void> {
+export async function detach(volumePath: string): Promise<number> {
     console.log(tl.loc('DetachDiskImage'));
     const hdiutil = sudo('hdiutil');
     hdiutil.line(`detach "${volumePath}"`);
-    await hdiutil.exec();
+    return await hdiutil.exec();
 }

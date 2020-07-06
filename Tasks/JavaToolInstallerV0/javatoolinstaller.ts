@@ -86,8 +86,10 @@ async function getJava(versionSpec: string) {
 }
 
 /**
- * Return file ending if it is supported. Otherwise throw an error.
+ * Get file ending if it is supported. Otherwise throw an error.
+ * Find file ending, not extension. For example, there is supported .tar.gz file ending but the extension is .gz.
  * @param file Path to a file.
+ * @returns string
  */
 function getSupportedFileEnding(file: string): string {
     const fileEnding: string = supportedFileEndings.find(ending => file.endsWith(ending)); 
@@ -104,6 +106,7 @@ function getSupportedFileEnding(file: string): string {
  * @param sourceFile Path to JDK file.
  * @param fileExtension JDK file extension.
  * @param archiveExtractLocation Path to folder to extract a JDK.
+ * @returns string
  */
 async function installJDK(sourceFile: string, fileExtension: string, archiveExtractLocation: string, extendedJavaHome: string, versionSpec: string): Promise<string> {
     let jdkDirectory;
@@ -119,12 +122,11 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
         try {
             jdkDirectory = await installPkg(pkgPath, extendedJavaHome, versionSpec);
         } catch (error) {
+            throw error;
+        } finally {
             // In case of an error, there is still a need to detach the disk image
             await detach(volumePath);
-            throw error;
         }
-
-        await detach(volumePath);
     }
     else if (fileExtension === '.pkg' && os.platform() === 'darwin') {
         jdkDirectory = await installPkg(sourceFile, extendedJavaHome, versionSpec);
@@ -140,6 +142,7 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
  * Get the path to a folder inside the VOLUMES_FOLDER.
  * Only for macOS.
  * @param volumes VOLUMES_FOLDER contents before attaching a disk image.
+ * @returns string
  */
 function getVolumePath(volumes: Set<string>): string {
     const newVolumes: string[] = fs.readdirSync(VOLUMES_FOLDER).filter(volume => !volumes.has(volume));
@@ -154,6 +157,7 @@ function getVolumePath(volumes: Set<string>): string {
  * Get path to a .pkg file.
  * Only for macOS.
  * @param volumePath Path to the folder containing a .pkg file.
+ * @returns string
  */
 function getPackagePath(volumePath: string): string {
     const packages: string[] = fs.readdirSync(volumePath).filter(file => file.endsWith('.pkg'));
@@ -202,12 +206,14 @@ async function installPkg(pkgPath: string, extendedJavaHome: string, versionSpec
 /**
  * Install a .pkg file.
  * Only for macOS.
+ * Returns promise with return code.
  * @param pkgPath Path to a .pkg file.
+ * @returns number
  */
-async function runPkgInstaller(pkgPath: string): Promise<void> {
+async function runPkgInstaller(pkgPath: string): Promise<number> {
     const installer = sudo('installer');
     installer.line(`-package "${pkgPath}" -target /`);
-    await installer.exec();
+    return await installer.exec();
 }
 
 run();
