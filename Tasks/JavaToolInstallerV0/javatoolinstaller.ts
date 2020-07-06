@@ -116,14 +116,15 @@ async function installJDK(sourceFile: string, fileExtension: string, archiveExtr
         const volumePath: string = getVolumePath(volumes);
 
         let pkgPath: string = getPackagePath(volumePath);
-        jdkDirectory = await installPkg(pkgPath, extendedJavaHome, versionSpec);
-
         try {
+            jdkDirectory = await installPkg(pkgPath, extendedJavaHome, versionSpec);
+        } catch (error) {
+            // In case of an error, there is still a need to detach the disk image
             await detach(volumePath);
+            throw error;
         }
-        catch(error) {
-            taskLib.error(error.message);
-        }
+
+        await detach(volumePath);
     }
     else if (fileExtension === '.pkg' && os.platform() === 'darwin') {
         jdkDirectory = await installPkg(sourceFile, extendedJavaHome, versionSpec);
@@ -204,14 +205,9 @@ async function installPkg(pkgPath: string, extendedJavaHome: string, versionSpec
  * @param pkgPath Path to a .pkg file.
  */
 async function runPkgInstaller(pkgPath: string): Promise<void> {
-    try {
-        const installer = sudo('installer');
-        installer.line(`-package "${pkgPath}" -target /`);
-        await installer.exec();
-    } catch (error) {
-        taskLib.debug('Failed to install pkg file');
-        taskLib.error(error.message);
-    }
+    const installer = sudo('installer');
+    installer.line(`-package "${pkgPath}" -target /`);
+    await installer.exec();
 }
 
 run();

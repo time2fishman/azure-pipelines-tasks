@@ -186,6 +186,7 @@
     "AttachDiskImage": "ms-resource:loc.messages.AttachDiskImage",
     "DetachDiskImage": "ms-resource:loc.messages.DetachDiskImage",
     "PkgPathDoesNotExist": "ms-resource:loc.messages.PkgPathDoesNotExist",
-    "PreInstalledJavaUpgraded": "ms-resource:loc.messages.PreInstalledJavaUpgraded"
+    "PreInstalledJavaUpgraded": "ms-resource:loc.messages.PreInstalledJavaUpgraded",
+    "JavaSuccessfullyInstalled": "ms-resource:loc.messages.JavaSuccessfullyInstalled"
   }
 }

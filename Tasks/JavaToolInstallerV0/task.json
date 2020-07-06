@@ -186,6 +186,7 @@
         "AttachDiskImage": "Attaching a disk image.",
         "DetachDiskImage": "Detaching a disk image.",
         "PkgPathDoesNotExist": "Package path does not exist.",
-        "PreInstalledJavaUpgraded": "Preinstalled JDK updated."
+        "PreInstalledJavaUpgraded": "Preinstalled JDK updated.",
+        "JavaSuccessfullyInstalled": "Java has been successfully installed"
     }
 }
