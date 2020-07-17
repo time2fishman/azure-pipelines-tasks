@@ -178,7 +178,6 @@
     "JavaNotPreinstalled": "ms-resource:loc.messages.JavaNotPreinstalled",
     "UsePreinstalledJava": "ms-resource:loc.messages.UsePreinstalledJava",
     "WrongArchiveStructure": "ms-resource:loc.messages.WrongArchiveStructure",
-    "NewJDKIsNotInstalled": "ms-resource:loc.messages.NewJDKIsNotInstalled",
     "UnsupportedDMGStructure": "ms-resource:loc.messages.UnsupportedDMGStructure",
     "NoPKGFile": "ms-resource:loc.messages.NoPKGFile",
     "SeveralPKGFiles": "ms-resource:loc.messages.SeveralPKGFiles",
